@@ -157,9 +157,9 @@ export default function Product() {
     SOTISH
   </Button>
 </NavLink>
-                <NavLink to="/sell/credit" className="w-full">
+                <NavLink to={`/sell/credit/${product.id}`} className="w-full">
                   <Button color="green" size="lg" fullWidth>
-                    Credit asosida sotish
+                    Credit asosida 
                   </Button>
                 </NavLink>
               </CardFooter>

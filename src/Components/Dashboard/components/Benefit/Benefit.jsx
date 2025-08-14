@@ -1,30 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, BarChart, Bar
+} from 'recharts';
 import { Calendar, DollarSign, Users, Filter } from 'lucide-react';
-
-// Mock data generator
-function generateDailyData(start, end) {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  const days = [];
-  let current = new Date(startDate);
-  while (current <= endDate) {
-    days.push({
-      date: current.toISOString().slice(0, 10),
-      amount: Math.random() > 0.3 ? Math.floor(Math.random() * 50000) + 10000 : 0,
-    });
-    current.setDate(current.getDate() + 1);
-  }
-  return days;
-}
 
 export default function Benefit() {
   const [paymentsData, setPaymentsData] = useState(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(false);
+  const firstRun = useRef(true);
 
-  // Hozirgi oyni olish
+  // === Utilities ===
   const getCurrentMonth = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -35,13 +24,71 @@ export default function Benefit() {
     return { firstDay, lastDayFormatted };
   };
 
-  // Mock ma'lumotlarni olish
+  const toISODate = (d) => {
+    // timezone ta'sirini oldini olamiz
+    const dt = new Date(d);
+    const tzSafe = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000);
+    return tzSafe.toISOString().slice(0, 10);
+  };
+
+  // Kunlar oralig'ini to'liq (0-lar bilan) to'ldirish
+  const fillMissingDates = (dailyData, start, end) => {
+    const byDate = new Map(dailyData.map(d => [d.date, Number(d.amount) || 0]));
+    const result = [];
+    let current = new Date(start);
+    const last = new Date(end);
+
+    while (current <= last) {
+      const dateStr = toISODate(current);
+      result.push({
+        date: dateStr,
+        amount: byDate.has(dateStr) ? byDate.get(dateStr) : 0,
+      });
+      current.setDate(current.getDate() + 1);
+    }
+    return result;
+  };
+
+  // Backend javobni normalize qilish:
+  // - Variant A: { data: [{date, amount}, ...] }
+  // - Variant B: { daily_totals: { 'YYYY-MM-DD': number, ... }, total_sum, total_count }
+  const normalizeApiResponse = (payload) => {
+    // A)
+    if (Array.isArray(payload?.data)) {
+      const arr = payload.data.map(it => ({
+        date: toISODate(it.date),
+        amount: Number(it.amount) || 0,
+      }));
+      return {
+        daily: arr,
+        total_sum: arr.reduce((s, i) => s + i.amount, 0),
+        total_count: arr.filter(i => i.amount > 0).length,
+      };
+    }
+    // B)
+    if (payload?.daily_totals && typeof payload.daily_totals === 'object') {
+      const arr = Object.entries(payload.daily_totals).map(([date, amount]) => ({
+        date: toISODate(date),
+        amount: Number(amount) || 0,
+      }));
+      return {
+        daily: arr,
+        total_sum: Number(payload.total_sum) || arr.reduce((s, i) => s + i.amount, 0),
+        total_count: Number(payload.total_count) || arr.filter(i => i.amount > 0).length,
+      };
+    }
+    // Fallback: bo'sh
+    return { daily: [], total_sum: 0, total_count: 0 };
+  };
+
+  // === API ===
   const fetchPaymentsData = async (start = null, end = null) => {
     setLoading(true);
     try {
       let startParam = start || startDate;
       let endParam = end || endDate;
 
+      // Agar kiritilmagan bo'lsa, joriy oy
       if (!startParam || !endParam) {
         const { firstDay, lastDayFormatted } = getCurrentMonth();
         startParam = firstDay;
@@ -50,49 +97,62 @@ export default function Benefit() {
         setEndDate(lastDayFormatted);
       }
 
-      const daily = generateDailyData(startParam, endParam);
-      const total = daily.reduce((sum, item) => sum + item.amount, 0);
-      const count = daily.filter(item => item.amount > 0).length;
+      const res = await axios.get(`/api/payments?from=${startParam}&to=${endParam}`, {
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Accept': 'application/json',
+        },
+      });
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const normalized = normalizeApiResponse(res.data || {});
+      const filledDaily = fillMissingDates(normalized.daily, startParam, endParam);
+
+      const total = normalized.total_sum ?? filledDaily.reduce((s, i) => s + i.amount, 0);
+      const count = normalized.total_count ?? filledDaily.filter(i => i.amount > 0).length;
+
       setPaymentsData({
-        total_payments: `${total.toLocaleString()} UZS`,
+        total_payments: `${Number(total).toLocaleString()} UZS`,
         count,
         start_date: startParam,
         end_date: endParam,
-        daily,
+        daily: filledDaily,
       });
     } catch (error) {
-      console.error('Ma\'lumotlarni yuklashda xatolik:', error);
+      console.error('API xatosi:', error);
+      setPaymentsData(null);
     } finally {
       setLoading(false);
     }
   };
 
+  // Mount -> joriy oyga qo'yamiz (fetchni ikkinchi effect qiladi)
   useEffect(() => {
     const { firstDay, lastDayFormatted } = getCurrentMonth();
     setStartDate(firstDay);
     setEndDate(lastDayFormatted);
-    fetchPaymentsData(firstDay, lastDayFormatted);
-    // eslint-disable-next-line
   }, []);
 
+  // startDate/endDate o'zgarsa fetch
   useEffect(() => {
-    if (startDate && endDate) {
-      fetchPaymentsData();
+    if (!startDate || !endDate) return;
+    if (firstRun.current) {
+      firstRun.current = false;
     }
-    // eslint-disable-next-line
+    fetchPaymentsData(startDate, endDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDate, endDate]);
 
-  const chartData = paymentsData?.daily?.map(item => ({
-    date: new Date(item.date).getDate(),
-    amount: item.amount,
-    fullDate: item.date,
-    formattedDate: new Date(item.date).toLocaleDateString('uz-UZ', {
-      day: '2-digit',
-      month: '2-digit'
-    })
-  })) || [];
+  // Chart data
+  const chartData = (paymentsData?.daily || []).map(item => {
+    const d = new Date(item.date);
+    return {
+      date: d.getDate(), // XAxis uchun 1..31
+      amount: item.amount,
+      fullDate: item.date,
+      formattedDate: d.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit' }),
+    };
+  });
 
   const setCurrentMonth = () => {
     const { firstDay, lastDayFormatted } = getCurrentMonth();
@@ -106,7 +166,7 @@ export default function Benefit() {
       return (
         <div className="bg-white border-2 border-gray-300 p-3 shadow-lg rounded-lg">
           <p className="text-gray-800 font-medium">{`Sana: ${data.formattedDate}`}</p>
-          <p className="text-gray-600">{`Summa: ${payload[0].value.toLocaleString()} UZS`}</p>
+          <p className="text-gray-600">{`Summa: ${Number(payload[0].value || 0).toLocaleString()} UZS`}</p>
         </div>
       );
     }
@@ -115,7 +175,7 @@ export default function Benefit() {
 
   const calculateTotalFromDaily = () => {
     if (!paymentsData?.daily) return 0;
-    return paymentsData.daily.reduce((sum, item) => sum + item.amount, 0);
+    return paymentsData.daily.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   };
 
   return (
@@ -216,24 +276,24 @@ export default function Benefit() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     stroke="#6b7280"
                     fontSize={12}
                     tickLine={false}
                   />
-                  <YAxis 
+                  <YAxis
                     stroke="#6b7280"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(value) => `${value.toLocaleString()}`}
+                    tickFormatter={(value) => `${Number(value).toLocaleString()}`}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="amount" 
-                    stroke="#374151" 
+                  <Line
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#374151"
                     strokeWidth={3}
                     dot={{ fill: '#374151', strokeWidth: 2, r: 4 }}
                     activeDot={{ r: 6, stroke: '#374151', strokeWidth: 2, fill: '#fff' }}
@@ -260,22 +320,22 @@ export default function Benefit() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     stroke="#6b7280"
                     fontSize={12}
                     tickLine={false}
                   />
-                  <YAxis 
+                  <YAxis
                     stroke="#6b7280"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(value) => `${value.toLocaleString()}`}
+                    tickFormatter={(value) => `${Number(value).toLocaleString()}`}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar 
-                    dataKey="amount" 
+                  <Bar
+                    dataKey="amount"
                     fill="#374151"
                     radius={[4, 4, 0, 0]}
                   />

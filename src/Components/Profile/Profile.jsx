@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Card,
     CardBody,
@@ -11,22 +11,43 @@ import { UserCircleIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 export default function Profile() {
     const [isEditing, setIsEditing] = useState(false);
     const [user, setUser] = useState({
-        firstName: "Azizbek",
-        lastName: "Karimov",
-        phone: "+998 90 123 45 67",
+        firstName: "",
+        lastName: "",
+        phone: "",
     });
+
+    // localStorage dan user ni olish
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            const parsed = JSON.parse(storedUser);
+            setUser({
+                firstName: parsed.firstname || "",
+                lastName: parsed.lastname || "",
+                phone: parsed.phone || "",
+            });
+        }
+    }, []);
 
     const handleChange = (e) => {
         setUser({ ...user, [e.target.name]: e.target.value });
     };
 
     const handleSave = () => {
+        // Yangi qiymatlarni localStorage ga yozish
+        const updatedUser = {
+            firstname: user.firstName,
+            lastname: user.lastName,
+            phone: user.phone,
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+
         setIsEditing(false);
         alert("Ma'lumotlar saqlandi");
     };
 
     return (
-        <div className="min-h-screen flex items-center mt-[20px] justify-center ">
+        <div className="min-h-screen flex items-center mt-[20px] justify-center">
             <Card className="w-full max-w-xl shadow-xl rounded-2xl p-8 bg-white">
                 <div className="flex flex-col items-center gap-4 mb-6">
                     <UserCircleIcon className="w-24 h-24 text-blue-400" />

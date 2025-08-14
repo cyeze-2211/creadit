@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardBody, Typography, Button, IconButton } from "@material-tailwind/react";
 import { PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
-import OrderBoxCreate from "./OrderBoxCreate";
-import BoxEdit from "./OrderBoxEdit";
-import BoxDelete from "./OrderBoxDelete";
+import BoxEdit from "./ShopBoxEdit";
+import BoxDelete from "./ShopBoxDelete";
 import { NavLink } from "react-router-dom";
 import axios from "axios";
 import ReactLoading from 'react-loading';
 
-export default function OrderBox() {
+export default function ShopBox() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
@@ -19,7 +18,7 @@ export default function OrderBox() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get('/api/sells', {
+    axios.get('/api/cridets', {
       headers: {
         'ngrok-skip-browser-warning': 'true',
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -86,7 +85,7 @@ export default function OrderBox() {
     <div className="min-h-screen mt-[90px]">
       <div className="flex justify-between items-center mb-8 mx-auto">
         <Typography variant="h3" className="text-gray-900 font-bold">
-          Xaridlar ro'yxati
+          Buyurtmalar qutisi
         </Typography>
         {/* <Button
           color="green"
@@ -100,7 +99,7 @@ export default function OrderBox() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7 mx-auto">
         {orders.map((order) => (
-          <NavLink to={`/shop/detail/${order.id}`} key={order.id}>
+          <NavLink to={`/order/detail/${order.id}`} key={order.id}>
             <Card className="w-full bg-white rounded-3xl shadow-xl border border-gray-200 flex flex-col">
               <CardBody className="flex flex-col items-start p-4">
                 <div className="w-full mb-4 flex items-center gap-3">
@@ -161,12 +160,7 @@ export default function OrderBox() {
           </NavLink>
         ))}
       </div>
-      {openCreate && (
-        <OrderBoxCreate
-          onCreate={handleCreate}
-          onCancel={() => setOpenCreate(false)}
-        />
-      )}
+     
       {openEdit && editOrder && (
         <BoxEdit
           product={editOrder}

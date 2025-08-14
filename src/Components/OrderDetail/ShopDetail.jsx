@@ -10,14 +10,12 @@ import {
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import OrderPaymentCreate from "./OrderDetailCreate"; 
 
-export default function OrderDetail() {
+export default function ShopDetail() {
     const { id } = useParams();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     useEffect(() => {
         if (!id) {
@@ -69,16 +67,22 @@ export default function OrderDetail() {
         );
     }
 
+    // Ma'lumotlarni API dan kelgan struktura bo'yicha ajratamiz
     const client = order.customer || {};
     const product = order.product || {};
     const price = order.price || 0;
+
+    // To'lov tarixi bo'lsa, uni ko'rsating (agar APIda bo'lsa)
     const paymentHistory = order.payments || [];
+
+    // Qolgan summa hisoblash (agar kerakli fieldlar bo'lsa)
     const totalCredit = price;
     const paidAmount = paymentHistory.reduce((sum, p) => sum + (p.amount || 0), 0);
     const remainingAmount = totalCredit - paidAmount;
 
     return (
         <div className="mx-auto px-4 py-8 space-y-6 mt-[90px]">
+            {/* Mijoz haqida */}
             <Card className="flex flex-col md:flex-row items-center gap-6 p-4">
                 <Avatar
                     src={client.photo || "https://i.ibb.co/fY2Ypyk/default-user.png"}
@@ -119,62 +123,26 @@ export default function OrderDetail() {
                         </Typography>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                             <div>
-                                <Typography color="gray">Umumiy kredit</Typography>
+                                <Typography color="gray">Umumiy Tolov</Typography>
                                 <Typography>{totalCredit.toLocaleString()} $</Typography>
                             </div>
                             <div>
-                                <Typography color="gray">To‘langan</Typography>
-                                <Typography>{paidAmount.toLocaleString()} $</Typography>
+                                <Typography color="gray">To‘langan Vaqt</Typography>
+                                <Typography>{product.created_at} </Typography>
                             </div>
                             <div>
-                                <Typography color="gray">Qolgan</Typography>
+                                <Typography color="gray">Qolgan Tovarlar</Typography>
                                 <Typography className="text-red-500">
-                                    {remainingAmount.toLocaleString()} $
+                                    {product.amount} ta
                                 </Typography>
                             </div>
                         </div>
-                        <div className="mt-4">
-                            <Typography color="gray">Oylik to‘lov</Typography>
-                            <Typography className="mb-4">
-                                {product.monthly_payment ? Number(product.monthly_payment).toLocaleString() : "-"} $ / oy
-                            </Typography>
-                            <Button color="green" onClick={() => setShowPaymentModal(true)}>
-                                💳 Shu oy uchun to‘lash
-                            </Button>
-                        </div>
+                      
                     </div>
                 </div>
             </Card>
 
-            <Card className="p-4">
-                <Typography variant="h6" color="blue-gray" className="mb-2">
-                    To‘lov tarixi
-                </Typography>
-                <ul className="space-y-2">
-                    {paymentHistory.length > 0 ? paymentHistory.map((payment, index) => (
-                        <li key={index} className="flex justify-between text-sm">
-                            <span>{payment.month || payment.date}</span>
-                            <span>{payment.amount ? Number(payment.amount).toLocaleString() : "-"} $</span>
-                        </li>
-                    )) : (
-                        <li className="text-gray-500">To‘lovlar tarixi yo‘q</li>
-                    )}
-                </ul>
-            </Card>
-
-            {showPaymentModal && (
-                <OrderPaymentCreate
-                    orderId={id}
-                    onCreate={(newPayment) => {
-                        setOrder((prev) => ({
-                            ...prev,
-                            payments: [...(prev.payments || []), newPayment]
-                        }));
-                        setShowPaymentModal(false);
-                    }}
-                    onCancel={() => setShowPaymentModal(false)}
-                />
-            )}
+           
         </div>
     );
 }

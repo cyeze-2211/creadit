@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
     Card,
     CardBody,
@@ -7,42 +7,7 @@ import {
     Select,
     Option,
 } from "@material-tailwind/react";
-
-// 🔹 Примерные данные по долгам
-const debtorsData = [
-    {
-        id: 1,
-        name: "Azamat Aliyev",
-        phone: "+998901234567",
-        product: "iPhone 15 Pro",
-        monthlyAmount: 110,
-        month: "06",
-    },
-    {
-        id: 2,
-        name: "Madina Karimova",
-        phone: "+998933456789",
-        product: "Samsung TV",
-        monthlyAmount: 120,
-        month: "07",
-    },
-    {
-        id: 3,
-        name: "Shavkat Tursunov",
-        phone: "+998935554433",
-        product: "PlayStation 5",
-        monthlyAmount: 90,
-        month: "06",
-    },
-    {
-        id: 4,
-        name: "Dilnoza Usmonova",
-        phone: "+998939998877",
-        product: "MacBook Air",
-        monthlyAmount: 150,
-        month: "07",
-    },
-];
+import axios from "axios";
 
 const monthOptions = [
     { label: "Yanvar", value: "01" },
@@ -60,20 +25,53 @@ const monthOptions = [
 ];
 
 export default function Debtors() {
+    const currentMonth = new Date().toISOString().slice(5, 7);
+    const currentYear = new Date().getFullYear();
+
     const [search, setSearch] = useState("");
-    const [selectedMonth, setSelectedMonth] = useState("06");
+    const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+    const [year, setYear] = useState(currentYear);
+    const [debtors, setDebtors] = useState([]);
+    const [loading, setLoading] = useState(false);
 
+    // 🔹 API dan olish
+    useEffect(() => {
+        setLoading(true);
+        axios
+            .get(`/api/debtors?month=${selectedMonth}&year=${year}`, {
+                headers: {
+                    "ngrok-skip-browser-warning": "true",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    Accept: "application/json",
+                },
+            })
+            .then((res) => {
+                if (res.data && Array.isArray(res.data.debtors)) {
+                    setDebtors(res.data.debtors);
+                } else {
+                    setDebtors([]);
+                }
+            })
+            .catch((err) => {
+                console.error("API xatosi:", err);
+                setDebtors([]);
+            })
+            .finally(() => setLoading(false));
+    }, [selectedMonth, year]);
+
+    // 🔹 Filter qilingan ro‘yxat
     const filteredDebtors = useMemo(() => {
-        return debtorsData.filter(
+        return debtors.filter(
             (debtor) =>
-                debtor.month === selectedMonth &&
-                (debtor.name.toLowerCase().includes(search.toLowerCase()) ||
-                    debtor.phone.includes(search))
+                (debtor.fio &&
+                    debtor.fio.toLowerCase().includes(search.toLowerCase())) ||
+                (debtor.phone && debtor.phone.includes(search))
         );
-    }, [selectedMonth, search]);
+    }, [debtors, search]);
 
+    // 🔹 Umumiy summa (qarz string bo‘lsa ham numberga o‘giradi)
     const totalAmount = filteredDebtors.reduce(
-        (sum, d) => sum + d.monthlyAmount,
+        (sum, d) => sum + (Number(d.qarz) || 0),
         0
     );
 
@@ -90,7 +88,7 @@ export default function Debtors() {
                         Umumiy qarz – {monthOptions.find(m => m.value === selectedMonth)?.label}:
                     </Typography>
                     <Typography variant="h3" className="text-red-700 font-bold mt-2">
-                        ${totalAmount}
+                        {totalAmount.toLocaleString()} so‘m
                     </Typography>
                 </CardBody>
             </Card>
@@ -110,6 +108,13 @@ export default function Debtors() {
                         ))}
                     </Select>
                     <Input
+                        type="number"
+                        label="Yil"
+                        value={year}
+                        onChange={(e) => setYear(e.target.value)}
+                        crossOrigin={undefined}
+                    />
+                    <Input
                         label="Qidirish (Ism yoki Telefon)"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -121,7 +126,7 @@ export default function Debtors() {
             {/* Table */}
             <Card className="mb-8 shadow-md">
                 <CardBody className="flex flex-col md:flex-row gap-4 w-full">
-                    <div className="overflow-x-auto rounded-xl w-full ">
+                    <div className="overflow-x-auto rounded-xl w-full">
                         <table className="min-w-full text-sm">
                             <thead className="bg-gray-50 text-gray-700">
                                 <tr>
@@ -129,11 +134,17 @@ export default function Debtors() {
                                     <th className="px-4 py-3 text-left font-medium">F.I.O</th>
                                     <th className="px-4 py-3 text-left font-medium">Telefon</th>
                                     <th className="px-4 py-3 text-left font-medium">Tovar</th>
-                                    <th className="px-4 py-3 text-left font-medium">Qarz (USD)</th>
+                                    <th className="px-4 py-3 text-left font-medium">Qarz (so‘m)</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredDebtors.length === 0 ? (
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={5} className="text-center py-6 text-gray-500">
+                                            Yuklanmoqda...
+                                        </td>
+                                    </tr>
+                                ) : filteredDebtors.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="text-center py-6 text-gray-500">
                                             Ma'lumot topilmadi
@@ -142,15 +153,15 @@ export default function Debtors() {
                                 ) : (
                                     filteredDebtors.map((debtor, index) => (
                                         <tr
-                                            key={debtor.id}
+                                            key={index}
                                             className="hover:bg-gray-100 border-t border-gray-100 transition"
                                         >
                                             <td className="px-4 py-3">{index + 1}</td>
-                                            <td className="px-4 py-3">{debtor.name}</td>
+                                            <td className="px-4 py-3">{debtor.fio}</td>
                                             <td className="px-4 py-3">{debtor.phone}</td>
-                                            <td className="px-4 py-3">{debtor.product}</td>
+                                            <td className="px-4 py-3">{debtor.product_name}</td>
                                             <td className="px-4 py-3 font-semibold text-red-600">
-                                                ${debtor.monthlyAmount}
+                                                {Number(debtor.qarz).toLocaleString()} so‘m
                                             </td>
                                         </tr>
                                     ))
@@ -160,7 +171,6 @@ export default function Debtors() {
                     </div>
                 </CardBody>
             </Card>
-
         </div>
     );
 }

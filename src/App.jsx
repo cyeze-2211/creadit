@@ -17,10 +17,13 @@ import Debtors from "./Components/Debtors/Debtors";
 import Expenses from "./Components/Expenses/Expenses";
 import ClientDetail from "./Components/ClientDetail/ClientDetail";
 import OrderDetail from "./Components/OrderDetail/OrderDetail";
+import ShopDetail from "./Components/OrderDetail/ShopDetail";
+
 import Product from "./Components/Product/Product";
 import Profile from "./Components/Profile/Profile";
 import Sell from "./Components/Sell/Sell";
 import CreditSell from "./Components/CreditSell/CreditSell";
+import ShopBox from "./Components/Dashboard/components/ShopBox/ShopBox";
 
 function App() {
   return (
@@ -40,14 +43,19 @@ function App() {
             <Route path="/benefits" element={<Benefit />} />
             <Route path="/box" element={<Box />} />
             <Route path="/orderbox" element={<OrderBox />} />
+            <Route path="/shopbox" element={<ShopBox />} />
+
             <Route path="/debtors" element={<Debtors />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/client/profil/:id" element={<ClientDetail />} />
             <Route path="/order/detail/:id" element={<OrderDetail />} />
+            <Route path="/shop/detail/:id" element={<ShopDetail />} />
+
+            <Route path="/sell/credit/:id" element={<CreditSell />} />
+
             <Route path="/product/:id" element={<Product />} />
             <Route path="/profil" element={<Profile />} />
             <Route path="/sell/:id" element={<Sell />} />
-            <Route path="/sell/credit" element={<CreditSell />} />
           </Route>
           <Route element={<MainLayout />}>
             <Route index element={<Home />} />

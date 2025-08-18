@@ -8,6 +8,7 @@ import {
     Option,
 } from "@material-tailwind/react";
 import axios from "axios";
+import ReactLoading from "react-loading";
 
 const monthOptions = [
     { label: "Yanvar", value: "01" },
@@ -34,7 +35,6 @@ export default function Debtors() {
     const [debtors, setDebtors] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // 🔹 API dan olish
     useEffect(() => {
         setLoading(true);
         axios
@@ -59,7 +59,6 @@ export default function Debtors() {
             .finally(() => setLoading(false));
     }, [selectedMonth, year]);
 
-    // 🔹 Filter qilingan ro‘yxat
     const filteredDebtors = useMemo(() => {
         return debtors.filter(
             (debtor) =>
@@ -69,7 +68,6 @@ export default function Debtors() {
         );
     }, [debtors, search]);
 
-    // 🔹 Umumiy summa (qarz string bo‘lsa ham numberga o‘giradi)
     const totalAmount = filteredDebtors.reduce(
         (sum, d) => sum + (Number(d.qarz) || 0),
         0
@@ -81,7 +79,7 @@ export default function Debtors() {
                 Qarzdor mijozlar
             </Typography>
 
-            {/* Summary Card */}
+            {/* Umumiy summa */}
             <Card className="bg-gradient-to-r from-red-100 to-red-50 border border-red-300 mb-8 shadow-lg">
                 <CardBody>
                     <Typography variant="h6" className="text-red-900 font-semibold">
@@ -93,7 +91,7 @@ export default function Debtors() {
                 </CardBody>
             </Card>
 
-            {/* Filters */}
+            {/* Filterlar */}
             <Card className="mb-8 shadow-md">
                 <CardBody className="flex flex-col md:flex-row gap-4">
                     <Select
@@ -123,54 +121,54 @@ export default function Debtors() {
                 </CardBody>
             </Card>
 
-            {/* Table */}
-            <Card className="mb-8 shadow-md">
-                <CardBody className="flex flex-col md:flex-row gap-4 w-full">
-                    <div className="overflow-x-auto rounded-xl w-full">
-                        <table className="min-w-full text-sm">
-                            <thead className="bg-gray-50 text-gray-700">
-                                <tr>
-                                    <th className="px-4 py-3 text-left font-medium">#</th>
-                                    <th className="px-4 py-3 text-left font-medium">F.I.O</th>
-                                    <th className="px-4 py-3 text-left font-medium">Telefon</th>
-                                    <th className="px-4 py-3 text-left font-medium">Tovar</th>
-                                    <th className="px-4 py-3 text-left font-medium">Qarz (so‘m)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
+            {/* Jadval yoki Loader */}
+            {loading ? (
+                <div className="min-h-[300px] flex justify-center items-center">
+                    <ReactLoading type="spin" color="#4CAF50" height={100} width={100} />
+                </div>
+            ) : (
+                <Card className="mb-8 shadow-md">
+                    <CardBody className="flex flex-col md:flex-row gap-4 w-full">
+                        <div className="overflow-x-auto rounded-xl w-full">
+                            <table className="min-w-full text-sm">
+                                <thead className="bg-gray-50 text-gray-700">
                                     <tr>
-                                        <td colSpan={5} className="text-center py-6 text-gray-500">
-                                            Yuklanmoqda...
-                                        </td>
+                                        <th className="px-4 py-3 text-left font-medium">#</th>
+                                        <th className="px-4 py-3 text-left font-medium">F.I.O</th>
+                                        <th className="px-4 py-3 text-left font-medium">Telefon</th>
+                                        <th className="px-4 py-3 text-left font-medium">Tovar</th>
+                                        <th className="px-4 py-3 text-left font-medium">Qarz (so‘m)</th>
                                     </tr>
-                                ) : filteredDebtors.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="text-center py-6 text-gray-500">
-                                            Ma'lumot topilmadi
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredDebtors.map((debtor, index) => (
-                                        <tr
-                                            key={index}
-                                            className="hover:bg-gray-100 border-t border-gray-100 transition"
-                                        >
-                                            <td className="px-4 py-3">{index + 1}</td>
-                                            <td className="px-4 py-3">{debtor.fio}</td>
-                                            <td className="px-4 py-3">{debtor.phone}</td>
-                                            <td className="px-4 py-3">{debtor.product_name}</td>
-                                            <td className="px-4 py-3 font-semibold text-red-600">
-                                                {Number(debtor.qarz).toLocaleString()} so‘m
+                                </thead>
+                                <tbody>
+                                    {filteredDebtors.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="text-center py-6 text-gray-500">
+                                                Ma'lumot topilmadi
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </CardBody>
-            </Card>
+                                    ) : (
+                                        filteredDebtors.map((debtor, index) => (
+                                            <tr
+                                                key={index}
+                                                className="hover:bg-gray-100 border-t border-gray-100 transition"
+                                            >
+                                                <td className="px-4 py-3">{index + 1}</td>
+                                                <td className="px-4 py-3">{debtor.fio}</td>
+                                                <td className="px-4 py-3">{debtor.phone}</td>
+                                                <td className="px-4 py-3">{debtor.product_name}</td>
+                                                <td className="px-4 py-3 font-semibold text-red-600">
+                                                    {Number(debtor.qarz).toLocaleString()} so‘m
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </CardBody>
+                </Card>
+            )}
         </div>
     );
 }

@@ -1,16 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardBody, Typography, Button, IconButton } from "@material-tailwind/react";
-import { PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import BoxEdit from "./ShopBoxEdit";
 import BoxDelete from "./ShopBoxDelete";
 import { NavLink } from "react-router-dom";
 import axios from "axios";
 import ReactLoading from 'react-loading';
 
+// Helper function to normalize image URL
+const getImageUrl = (url) => {
+  if (!url) return "https://via.placeholder.com/150x150?text=No+Image";
+
+  if (url.startsWith("http://localhost")) {
+    return url.replace("http://localhost", "https://nasiyapos.uz");
+  }
+
+  if (!url.startsWith("http")) {
+    return `https://nasiyapos.uz/storage/${url}`;
+  }
+
+  return url;
+};
+
 export default function ShopBox() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [editOrder, setEditOrder] = useState(null);
@@ -39,14 +53,6 @@ export default function ShopBox() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleCreate = (order) => {
-    setOrders(prev => [
-      ...prev,
-      { ...order, id: prev.length ? prev[prev.length - 1].id + 1 : 1 }
-    ]);
-    setOpenCreate(false);
-  };
-
   const handleEdit = (order) => {
     setOrders(prev =>
       prev.map(item => (item.id === order.id ? order : item))
@@ -74,10 +80,10 @@ export default function ShopBox() {
   if (loading) {
     return (
       <div className="min-h-screen mt-[90px] mb-[20px] px-4">
-           <div className="flex justify-center items-center h-64">
-             <ReactLoading type="spin" color="#4CAF50" height={100} width={100} />
-           </div>
-         </div>
+        <div className="flex justify-center items-center h-64">
+          <ReactLoading type="spin" color="#4CAF50" height={100} width={100} />
+        </div>
+      </div>
     );
   }
 
@@ -87,16 +93,8 @@ export default function ShopBox() {
         <Typography variant="h3" className="text-gray-900 font-bold">
           Buyurtmalar qutisi
         </Typography>
-        {/* <Button
-          color="green"
-          className="flex items-center gap-2"
-          onClick={() => setOpenCreate(true)}
-          size="sm"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Yangi buyurtma
-        </Button> */}
       </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7 mx-auto">
         {orders.map((order) => (
           <NavLink to={`/order/detail/${order.id}`} key={order.id}>
@@ -104,9 +102,12 @@ export default function ShopBox() {
               <CardBody className="flex flex-col items-start p-4">
                 <div className="w-full mb-4 flex items-center gap-3">
                   <img
-                    src={order.product?.image}
-                    alt={order.product?.product_name}
-                    className="w-16 h-16 object-contain rounded-xl bg-gray-100 border"
+                    src={getImageUrl(order.product?.image)}
+                    alt={order.product?.product_name || "Mahsulot"}
+                    className="w-16 h-16  rounded-xl bg-gray-100 border"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/150x150?text=No+Image";
+                    }}
                   />
                   <div>
                     <Typography variant="h6" className="text-gray-900 font-bold mb-1">
@@ -117,6 +118,7 @@ export default function ShopBox() {
                     </div>
                   </div>
                 </div>
+
                 <div className="mb-2 w-full">
                   <div className="text-gray-800 text-sm">
                     <span className="font-semibold">Egasining ismi:</span> {order.customer?.name}
@@ -124,43 +126,47 @@ export default function ShopBox() {
                   <div className="text-gray-800 text-sm">
                     <span className="font-semibold">Umumiy to'lov:</span> {order.price} USD
                   </div>
+                    <div className="text-gray-800 text-sm">
+                    <span className="font-semibold">Buyurtma oylik:</span> {order.monthly_payment}
+                  </div>
                   <div className="text-gray-800 text-sm">
                     <span className="font-semibold">Buyurtma sanasi:</span> {order.created_at?.slice(0, 10)}
                   </div>
                 </div>
+
                 <div className="flex gap-2 mt-auto ml-auto">
-                 <IconButton
-  variant="text"
-  color="blue"
-  onClick={(e) => {
-    e.preventDefault(); 
-    e.stopPropagation(); 
-    handleEditOpen(order);
-  }}
-  size="sm"
->
-  <PencilIcon className="w-5 h-5" />
-</IconButton>
-                 
-<IconButton
-  variant="text"
-  color="red"
-  onClick={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleDeleteOpen(order);
-  }}
-  size="sm"
->
-  <TrashIcon className="w-5 h-5" />
-</IconButton>
+                  <IconButton
+                    variant="text"
+                    color="blue"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleEditOpen(order);
+                    }}
+                    size="sm"
+                  >
+                    <PencilIcon className="w-5 h-5" />
+                  </IconButton>
+
+                  <IconButton
+                    variant="text"
+                    color="red"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDeleteOpen(order);
+                    }}
+                    size="sm"
+                  >
+                    <TrashIcon className="w-5 h-5" />
+                  </IconButton>
                 </div>
               </CardBody>
             </Card>
           </NavLink>
         ))}
       </div>
-     
+
       {openEdit && editOrder && (
         <BoxEdit
           product={editOrder}

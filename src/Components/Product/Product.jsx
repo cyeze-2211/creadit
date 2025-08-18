@@ -6,7 +6,7 @@ import {
   CardBody,
   CardFooter,
   Spinner,
-  Alert
+  Alert,
 } from "@material-tailwind/react";
 import { NavLink, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -18,6 +18,8 @@ export default function Product() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const BASE_URL = import.meta.env.VITE_API_URL || "https://nasiyapos.uz";
+
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -28,29 +30,49 @@ export default function Product() {
       return;
     }
 
-    axios.get(`/api/products/${id}`, {
-      headers: {
-        'ngrok-skip-browser-warning': 'true',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Accept': 'application/json'
-      }
-    })
-      .then(res => {
+    axios
+      .get(`/api/products/${id}`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Accept: "application/json",
+        },
+      })
+      .then((res) => {
         if (res.data?.data) {
-          setProduct(res.data.data);
+          const p = res.data.data;
+
+          // 🔧 Rasm urlni to‘g‘rilash
+          let fixedImage = p.image;
+          if (fixedImage?.includes("http://localhost")) {
+            fixedImage = fixedImage.replace(
+              "http://localhost",
+              BASE_URL
+            );
+          }
+
+          setProduct({
+            ...p,
+            image:
+              fixedImage ||
+              "https://via.placeholder.com/600x400?text=Rasm+Mavjud+Emas",
+          });
         } else {
           setError("Mahsulot topilmadi");
         }
       })
-      .catch(err => {
+      .catch((err) => {
         if (err.response) {
           if (err.response.status === 404) {
             setError("Mahsulot topilmadi");
           } else if (err.response.status === 401) {
             setError("Avtorizatsiyadan o‘tish kerak");
-            setTimeout(() => navigate('/login'), 2000);
+            setTimeout(() => navigate("/login"), 2000);
           } else {
-            setError(err.response.data?.message || `Server xatosi (${err.response.status})`);
+            setError(
+              err.response.data?.message ||
+                `Server xatosi (${err.response.status})`
+            );
           }
         } else if (err.request) {
           setError("Serverga ulanib bo‘lmadi");
@@ -80,7 +102,7 @@ export default function Product() {
             Xatolik!
           </Typography>
           <Typography className="mb-4">{error}</Typography>
-          <Button color="blue" onClick={() => navigate('/')}>
+          <Button color="blue" onClick={() => navigate("/")}>
             Bosh sahifaga qaytish
           </Button>
         </Alert>
@@ -102,18 +124,18 @@ export default function Product() {
   }
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className="min-h-screen py-8 px-4 mt-[100px]">
       <div className="max-w-6xl mx-auto">
         <Card className="overflow-hidden">
           <div className="flex flex-col lg:flex-row">
-            {/* Product Image */}
             <div className="lg:w-1/2 bg-gray-100 p-8 flex items-center justify-center">
               <img
-                src={product.image || 'https://via.placeholder.com/600x400?text=Rasm+Mavjud+Emas'}
+                src={product.image}
                 alt={product.product_name}
-                className="max-h-[500px] w-auto object-contain rounded-lg"
+                className="max-h-[500px] w-auto  rounded-lg"
                 onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/600x400?text=Rasm+Yuklanmadi';
+                  e.currentTarget.src =
+                    "https://via.placeholder.com/600x400?text=Rasm+Yuklanmadi";
                 }}
               />
             </div>
@@ -137,7 +159,9 @@ export default function Product() {
                     </Typography>
                     <Typography className="flex justify-between">
                       <span className="text-gray-600">Muddat:</span>
-                      <span className="font-medium">{product.monthly_payment}</span>
+                      <span className="font-medium">
+                        {product.monthly_payment}
+                      </span>
                     </Typography>
                     {product.created_at && (
                       <Typography className="flex justify-between">
@@ -152,14 +176,14 @@ export default function Product() {
               </CardBody>
 
               <CardFooter className="flex flex-col sm:flex-row gap-4 pt-6">
-              <NavLink to={`/sell/${product.id}`} className="w-full">
-  <Button color="blue" size="lg" fullWidth>
-    SOTISH
-  </Button>
-</NavLink>
+                <NavLink to={`/sell/${product.id}`} className="w-full">
+                  <Button color="blue" size="lg" fullWidth>
+                    SOTISH
+                  </Button>
+                </NavLink>
                 <NavLink to={`/sell/credit/${product.id}`} className="w-full">
                   <Button color="green" size="lg" fullWidth>
-                    Credit asosida 
+                    Credit asosida
                   </Button>
                 </NavLink>
               </CardFooter>

@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 
 export default function BoxCreate({ onCreate, onCancel }) {
   const [name, setName] = useState("");
-  const [image, setImage] = useState("");
+  const [image, setImage] = useState(null); // Fayl uchun
   const [price, setPrice] = useState(""); 
   const [amount, setAmount] = useState(""); 
   const [installment, setInstallment] = useState("");
@@ -48,34 +48,35 @@ export default function BoxCreate({ onCreate, onCancel }) {
 
     try {
       const formData = new FormData();
-      formData.append('product_name', name.toString());
-      formData.append('image', image.toString());
-      formData.append('amount', Number(amount)); 
-      formData.append('price', Number(price)); 
-      formData.append('Installment', Number(installment));
-      formData.append('monthly_payment', monthlyPayment.toString());
+      formData.append("product_name", name);
+      formData.append("image", image); // Fayl obyektini qo‘shyapmiz
+      formData.append("amount", Number(amount)); 
+      formData.append("price", Number(price)); 
+      formData.append("Installment", Number(installment));
+      formData.append("monthly_payment", monthlyPayment);
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
         Swal.fire({
-    toast: true,
-    position: 'top-end',
-    icon: 'error',
-    title: 'Token topilmadi. Qayta login qiling.',
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true
-  });
+          toast: true,
+          position: "top-end",
+          icon: "error",
+          title: "Token topilmadi. Qayta login qiling.",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
         setLoading(false);
         return;
       }
 
-      const response = await axios.post('/api/products', formData, {
+      const response = await axios.post("/api/products", formData, {
         headers: {
-          'ngrok-skip-browser-warning': 'true',
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        }
+          "ngrok-skip-browser-warning": "true",
+          "Authorization": `Bearer ${token}`,
+          "Accept": "application/json",
+          "Content-Type": "multipart/form-data", // <-- MUHIM!
+        },
       });
 
       const newProduct = {
@@ -90,32 +91,31 @@ export default function BoxCreate({ onCreate, onCancel }) {
 
       onCreate(newProduct);
 
- Swal.fire({
-  toast: true,
-  position: 'top-end',
-  icon: 'success',
-  title: 'Mahsulot muvaffaqiyatli qo‘shildi.',
-  showConfirmButton: false,
-  timer: 3000,
-  timerProgressBar: true
-});
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Mahsulot muvaffaqiyatli qo‘shildi.",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
 
     } catch (error) {
-      console.error('Mahsulot qo\'shishda xatolik:', error.response?.data || error);
-     Swal.fire({
-  toast: true,
-  position: 'top-end',
-  icon: 'error',
-  title: 'Mahsulot qo‘shishda xatolik yuz berdi',
-  showConfirmButton: false,
-  timer: 3000,
-  timerProgressBar: true
-});
+      console.error("Mahsulot qo'sishda xatolik:", error.response?.data || error);
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: "Mahsulot qo‘shishda xatolik yuz berdi",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <div
@@ -142,13 +142,17 @@ export default function BoxCreate({ onCreate, onCancel }) {
                 required
                 disabled={loading}
               />
-              <Input
-                label="Rasm URL"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
+              
+              {/* Fayl upload */}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImage(e.target.files[0])}
                 required
                 disabled={loading}
+                className="border rounded-md p-2"
               />
+
               <Input
                 label="Narxi"
                 type="number"
@@ -201,7 +205,7 @@ export default function BoxCreate({ onCreate, onCancel }) {
                       Saqlanmoqda...
                     </>
                   ) : (
-                    'Saqlash'
+                    "Saqlash"
                   )}
                 </Button>
               </div>
@@ -209,38 +213,6 @@ export default function BoxCreate({ onCreate, onCancel }) {
           </CardBody>
         </Card>
       </div>
-      <style>
-        {`
-        .animate-fade-in {
-          animation: fadeInBg 0.3s ease;
-        }
-        .animate-fade-out {
-          animation: fadeOutBg 0.25s ease forwards;
-        }
-        @keyframes fadeInBg {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes fadeOutBg {
-          from { opacity: 1; }
-          to { opacity: 0; }
-        }
-        .animate-modal-in {
-          animation: modalIn 0.3s cubic-bezier(.4,0,.2,1) forwards;
-        }
-        .animate-modal-out {
-          animation: modalOut 0.25s cubic-bezier(.4,0,.2,1) forwards;
-        }
-        @keyframes modalIn {
-          from { opacity: 0; transform: scale(0.95);}
-          to { opacity: 1; transform: scale(1);}
-        }
-        @keyframes modalOut {
-          from { opacity: 1; transform: scale(1);}
-          to { opacity: 0; transform: scale(0.95);}
-        }
-        `}
-      </style>
     </div>
   );
 }

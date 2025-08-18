@@ -11,7 +11,7 @@ import {
 import axios from "axios";
 import Swal from "sweetalert2";
 
-export default function OrderPaymentCreate({ orderId, onCreate, onCancel }) {
+export default function OrderDabtors({ orderId, onCreate, onCancel }) {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
   const [orderData, setOrderData] = useState(null);
@@ -66,13 +66,14 @@ export default function OrderPaymentCreate({ orderId, onCreate, onCancel }) {
     setLoading(true);
     try {
       const res = await axios.post(
-        `/api/tolov`,
+        `/api/qarz-yozish`, // 🔥 endi qarz yozish API ga
         {
           customer_id: orderData.customer?.id,
           product_id: orderData.product?.id,
           umumiy_kredit: orderData.price,
-          tolash_kerak_bogan_summa: String(amount), // string tip
-          sana: date
+          qarz_summa: String(amount), // qarz miqdori
+          sana: date,
+          status: "qarzdor" // default holatda qarzdor
         },
         {
           headers: {
@@ -85,10 +86,10 @@ export default function OrderPaymentCreate({ orderId, onCreate, onCancel }) {
       );
 
       if (res.data) {
-        toast("success", "To‘lov muvaffaqiyatli qo‘shildi");
+        toast("success", "Qarz muvaffaqiyatli yozildi");
         onCreate(res.data);
       } else {
-        toast("error", "To‘lov qo‘shilmadi");
+        toast("error", "Qarz yozilmadi");
       }
     } catch (err) {
       toast("error", err.response?.data?.message || "Xatolik yuz berdi");
@@ -110,11 +111,11 @@ export default function OrderPaymentCreate({ orderId, onCreate, onCancel }) {
 
   return (
     <Dialog open={true} handler={onCancel} size="sm">
-      <DialogHeader>Yangi to‘lov qo‘shish</DialogHeader>
+      <DialogHeader>Qarz yozish</DialogHeader>
       <form onSubmit={handleSubmit}>
         <DialogBody className="flex flex-col gap-4">
           <Input
-            label="To‘lov summasi"
+            label="Qarz summasi"
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -123,7 +124,7 @@ export default function OrderPaymentCreate({ orderId, onCreate, onCancel }) {
             crossOrigin={undefined}
           />
           <Input
-            label="To‘lov sanasi"
+            label="Qarz sanasi"
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
@@ -143,7 +144,7 @@ export default function OrderPaymentCreate({ orderId, onCreate, onCancel }) {
             Bekor qilish
           </Button>
           <Button color="green" type="submit" disabled={loading}>
-            Qo‘shish
+            Saqlash
           </Button>
         </DialogFooter>
       </form>

@@ -44,14 +44,27 @@ export default function Box() {
         });
         
   
-        const formattedProducts = response.data.data.map(product => ({
-          id: product.id,
-          name: product.product_name,
-          image: product.image,
-          price: parseFloat(product.price),
-          months: parseInt(product.monthly_payment.replace('-oy', '')) || 12,
-          monthly: parseFloat(product.Installment.replace('$', '')) || 0,
-        }));
+      const formattedProducts = response.data.data.map(product => {
+  let fixedImage = product.image;
+
+  // Agar localhost bo‘lsa nasiyapos.uz ga o‘zgartiramiz
+  if (fixedImage?.includes("http://localhost")) {
+    fixedImage = fixedImage.replace(
+      "http://localhost",
+      "https://nasiyapos.uz"
+    );
+  }
+
+  return {
+    id: product.id,
+    name: product.product_name,
+    image: fixedImage, // ✅ tozalangan rasm url
+    price: parseFloat(product.price),
+    months: parseInt(product.monthly_payment.replace('-oy', '')) || 12,
+    monthly: parseFloat(product.Installment.replace('$', '')) || 0,
+  };
+});
+
         
         setProducts(formattedProducts);
         setError(null);
@@ -171,14 +184,15 @@ export default function Box() {
             >
               <CardBody className="flex flex-col items-center p-4">
                 <div className="w-full mb-4">
-                  <img
-                    src={ product.image}
-                    alt={product.name}
-                    className="w-full h-48 object-contain rounded-xl "
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
-                    }}
-                  />
+                 <img
+  src={product.image}
+  alt={product.name}
+  className="w-full h-48 object-cover rounded-xl" // ✅ object-cover qilib rasmni kesib chiqaradi
+  onError={(e) => {
+    e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
+  }}
+/>
+
                 </div>
                 <Typography
                   variant="h6"

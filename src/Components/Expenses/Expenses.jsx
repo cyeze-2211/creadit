@@ -11,6 +11,9 @@ import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import dayjs from "dayjs";
 import axios from "axios";
 import ExpensesCreate from "./ExpensesCreate";
+import ExpensesEdit from "./ExpensesEdit";
+import ExpensesDelete from "./ExpensesDelete";
+import ReactLoading from 'react-loading';
 
 const today = dayjs();
 const defaultStart = today.startOf("month").format("YYYY-MM-DD");
@@ -22,6 +25,12 @@ export default function Expenses() {
     const [endDate, setEndDate] = useState(defaultEnd);
     const [loading, setLoading] = useState(false);
     const [openCreate, setOpenCreate] = useState(false);
+    const [openEdit, setOpenEdit] = useState(false);
+    const [openDelete, setOpenDelete] = useState(false);
+
+    const [id, setId] = useState(null);
+
+
 
     // 📌 API'dan xarajatlarni olish
     const fetchExpenses = async () => {
@@ -53,32 +62,14 @@ export default function Expenses() {
 
     const total = filteredExpenses.reduce((sum, item) => sum + Number(item.price), 0);
 
-    const handleDelete = async (id) => {
-        const confirmDelete = window.confirm("Rostdan ham o‘chirmoqchimisiz?");
-        if (!confirmDelete) return;
-        try {
-            await axios.delete(`/api/expenses/${id}`, {
-                headers: {
-                    "ngrok-skip-browser-warning": "true",
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
-                    "Accept": "application/json"
-                }
-            });
-            setExpenses((prev) => prev.filter((e) => e.id !== id));
-        } catch (err) {
-            alert("O‘chirishda xatolik yuz berdi");
-        }
-    };
 
-    const handleUpdate = (expense) => {
-        alert(`Tahrirlash: ${expense.name} (funksiya hali yozilmagan)`);
-    };
 
-    // 📌 Modal orqali yangi xarajat qo‘shish
+
     const handleCreate = (newExpense) => {
         setExpenses((prev) => [newExpense, ...prev]);
         setOpenCreate(false);
     };
+  
 
     return (
         <div className="mt-[90px] pb-10 ">
@@ -116,7 +107,11 @@ export default function Expenses() {
 
             <div className="flex flex-col gap-6">
                 {loading ? (
-                    <Card className="p-6 text-center text-gray-500">Yuklanmoqda...</Card>
+                    <div className="min-h-screen mt-[90px] mb-[20px] px-4">
+                             <div className="flex justify-center items-center h-64">
+                               <ReactLoading type="spin" color="#4CAF50" height={100} width={100} />
+                             </div>
+                           </div>
                 ) : filteredExpenses.length === 0 ? (
                     <Card className="p-6 bg-gray-50 border text-center text-gray-500">
                         Xarajatlar topilmadi
@@ -147,17 +142,23 @@ export default function Expenses() {
                                             ${expense.price}
                                         </Typography>
                                         <div className="flex gap-2">
-                                            <IconButton
-                                                variant="text"
-                                                color="blue"
-                                                onClick={() => handleUpdate(expense)}
-                                            >
-                                                <PencilIcon className="w-5 h-5" />
-                                            </IconButton>
+                                           <IconButton
+  variant="text"
+  color="blue"
+  onClick={() => {
+    setId(expense.id); 
+    setOpenEdit(true);
+  }}
+>
+  <PencilIcon className="w-5 h-5" />
+</IconButton>
                                             <IconButton
                                                 variant="text"
                                                 color="red"
-                                                onClick={() => handleDelete(expense.id)}
+                                                 onClick={() => {
+    setId(expense.id); 
+    setOpenDelete(true);
+  }}
                                             >
                                                 <TrashIcon className="w-5 h-5" />
                                             </IconButton>
@@ -177,6 +178,19 @@ export default function Expenses() {
                     onCancel={() => setOpenCreate(false)}
                 />
             )}
+           {openEdit && (
+  <ExpensesEdit
+    id={id}  
+    onCancel={() => setOpenEdit(false)}
+  />
+)}
+   {openDelete && (
+    <ExpensesDelete
+      id={id}  
+      onCancel={() => setOpenDelete(false)} 
+    />
+  )}
+
         </div>
     );
 }

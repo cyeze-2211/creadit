@@ -85,7 +85,7 @@ export default function ShopDetail() {
             {/* Mijoz haqida */}
             <Card className="flex flex-col md:flex-row items-center gap-6 p-4">
                 <Avatar
-                    src={client.photo || "https://i.ibb.co/fY2Ypyk/default-user.png"}
+                    src={client.image || "https://t4.ftcdn.net/jpg/00/65/77/27/360_F_65772719_A1UV5kLi5nCEWI0BNLLiFaBPEkUbv5Fv.jpg"}
                     size="xxl"
                     alt="User"
                     className="rounded-lg"
@@ -105,11 +105,20 @@ export default function ShopDetail() {
 
             <Card className="p-4">
                 <div className="flex flex-col md:flex-row gap-6 items-start">
-                    <img
-                        src={product.image}
-                        alt={product.product_name}
-                        className="w-full md:w-64 h-64 object-cover rounded-xl"
-                    />
+                   <img
+  src={
+    product?.image
+      ? product.image.startsWith("http")
+        ? product.image.replace("http://localhost", "https://nasiyapos.uz")
+        : `https://nasiyapos.uz${product.image}`
+      : "https://via.placeholder.com/150x150?text=No+Image"
+  }
+  alt={order.product?.product_name || "Mahsulot"}
+  className="w-full md:w-64 h-64 object-cover rounded-xl"
+  onError={(e) => {
+    e.currentTarget.src = "https://via.placeholder.com/150x150?text=No+Image";
+  }}
+/>
                     <div className="flex-1 space-y-2">
                         <Typography variant="h5">{product.product_name}</Typography>
                         <Typography className="text-gray-600 text-sm">

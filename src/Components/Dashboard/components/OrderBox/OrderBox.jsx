@@ -104,11 +104,21 @@ export default function OrderBox() {
             <Card className="w-full bg-white rounded-3xl shadow-xl border border-gray-200 flex flex-col">
               <CardBody className="flex flex-col items-start p-4">
                 <div className="w-full mb-4 flex items-center gap-3">
-                  <img
-                    src={order.product?.image}
-                    alt={order.product?.product_name}
-                    className="w-16 h-16 object-contain rounded-xl bg-gray-100 border"
-                  />
+                <img
+  src={
+    order.product?.image
+      ? order.product.image.startsWith("http")
+        ? order.product.image.replace("http://localhost", "https://nasiyapos.uz")
+        : `https://nasiyapos.uz${order.product.image}`
+      : "https://via.placeholder.com/150x150?text=No+Image"
+  }
+  alt={order.product?.product_name || "Mahsulot"}
+  className="w-16 h-16  rounded-xl bg-gray-100 border"
+  onError={(e) => {
+    e.currentTarget.src = "https://via.placeholder.com/150x150?text=No+Image";
+  }}
+/>
+
                   <div>
                     <Typography variant="h6" className="text-gray-900 font-bold mb-1">
                       {order.product?.product_name}

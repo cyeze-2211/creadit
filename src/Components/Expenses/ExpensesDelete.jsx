@@ -1,9 +1,11 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Card, CardBody, Typography, Button } from "@material-tailwind/react";
 import axios from "axios";
+import Swal from "sweetalert2";
 
-export default function BoxDelete({ product, onCancel }) {
+export default function ExpensesDelete({ id, onDelete, onCancel }) {
   const [closing, setClosing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -12,9 +14,11 @@ export default function BoxDelete({ product, onCancel }) {
         setClosing(true);
       }
     };
+
     const handleEsc = (event) => {
       if (event.key === "Escape") setClosing(true);
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEsc);
     return () => {
@@ -23,7 +27,6 @@ export default function BoxDelete({ product, onCancel }) {
     };
   }, []);
 
-  // Animatsiya tugaganda haqiqiy yopish
   useEffect(() => {
     if (closing) {
       const timer = setTimeout(() => {
@@ -33,20 +36,37 @@ export default function BoxDelete({ product, onCancel }) {
     }
   }, [closing, onCancel]);
 
-  // DELETE API chaqiruv
+  const showToast = (icon, title) => {
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon,
+      title,
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
+    });
+  };
+
   const handleDelete = async () => {
+    if (!id) return; // ✅ to‘g‘rilandi
+    setLoading(true);
     try {
-      await axios.delete(`/api/products/${product.id}`, {
+      await axios.delete(`/api/expenses/${id}`, {
         headers: {
+          "ngrok-skip-browser-warning": "true",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Accept: "application/json",
         },
       });
-
-      // muvaffaqiyatli o‘chirsa modal yopiladi
+      showToast("success", "Xarajat o‘chirildi");
+      onDelete(id); // ✅ ota komponentdan listni yangilash uchun
       setClosing(true);
     } catch (error) {
-      console.error("Delete error:", error.response?.data || error.message);
-      alert("Xatolik yuz berdi, qaytadan urinib ko‘ring!");
+      showToast("error", error.response?.data?.message || "O‘chirishda xatolik yuz berdi");
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,61 +85,31 @@ export default function BoxDelete({ product, onCancel }) {
         <Card className="bg-white rounded-2xl shadow-2xl border border-gray-200">
           <CardBody>
             <Typography variant="h6" className="text-gray-900 font-bold mb-4">
-              Mahsulotni o'chirish
+              Xarajatni o‘chirish
             </Typography>
             <Typography className="mb-4 text-gray-800">
-              <span className="font-semibold">{product.name}</span> mahsulotini
-              o‘chirishni tasdiqlaysizmi?
+              Ushbu xarajatni o‘chirmoqchimisiz?
             </Typography>
             <div className="flex justify-end gap-2">
               <Button
                 variant="text"
                 color="gray"
                 onClick={() => setClosing(true)}
+                disabled={loading}
               >
                 Bekor qilish
               </Button>
-              <Button color="red" onClick={handleDelete}>
-                O'chirish
+              <Button
+                color="red"
+                onClick={handleDelete}
+                disabled={loading}
+              >
+                O‘chirish
               </Button>
             </div>
           </CardBody>
         </Card>
       </div>
-
-      {/* Animatsiya uchun style */}
-      <style>
-        {`
-        .animate-fade-in {
-          animation: fadeInBg 0.3s ease;
-        }
-        .animate-fade-out {
-          animation: fadeOutBg 0.25s ease forwards;
-        }
-        @keyframes fadeInBg {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes fadeOutBg {
-          from { opacity: 1; }
-          to { opacity: 0; }
-        }
-        .animate-modal-in {
-          animation: modalIn 0.3s cubic-bezier(.4,0,.2,1) forwards;
-        }
-        .animate-modal-out {
-          animation: modalOut 0.25s cubic-bezier(.4,0,.2,1) forwards;
-        }
-        @keyframes modalIn {
-          from { opacity: 0; transform: scale(0.95);}
-          to { opacity: 1; transform: scale(1);}
-        }
-        @keyframes modalOut {
-          from { opacity: 1; transform: scale(1);}
-          to { opacity: 0; transform: scale(0.95);}
-        }
-        `}
-      </style>
     </div>
   );
 }

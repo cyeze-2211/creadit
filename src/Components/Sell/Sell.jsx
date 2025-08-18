@@ -121,11 +121,21 @@ export default function Sell() {
             {/* Mahsulot haqida */}
             <Card className="w-full max-w-2xl shadow-lg rounded-xl p-6">
                 <div className="flex items-center gap-4 text-left">
-                    <img
-                        src={product.image}
-                        alt={product.product_name}
-                        className="w-40 h-40 object-contain rounded-full shadow-md"
-                    />
+                  <img
+  src={
+    product.image
+      ? product.image.startsWith("http")
+        ? product.image.replace("http://localhost", "https://nasiyapos.uz")
+        : `https://nasiyapos.uz${product.image}`
+      : "https://via.placeholder.com/400x400?text=Rasm+Mavjud+Emas"
+  }
+  alt={product.product_name}
+  className="w-40 h-40  rounded-full shadow-md"
+  onError={(e) => {
+    e.currentTarget.src =
+      "https://via.placeholder.com/400x400?text=Rasm+Yuklanmadi";
+  }}
+/>
                     <div>
                         <Typography variant="h5" color="blue-gray" className="font-bold">
                             {product.product_name}

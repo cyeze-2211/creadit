@@ -87,7 +87,7 @@ export default function ClientDetail() {
         <div className="mx-auto space-y-6 mt-[90px]">
             <Card className="flex flex-col md:flex-row items-center gap-6 p-4">
                 <Avatar
-                    src={client.photo || "https://i.ibb.co/fY2Ypyk/default-user.png"}
+                    src={client.photo || "https://t4.ftcdn.net/jpg/00/65/77/27/360_F_65772719_A1UV5kLi5nCEWI0BNLLiFaBPEkUbv5Fv.jpg"}
                     alt="Mijoz rasmi"
                     size="xxl"
                     className="rounded-lg"

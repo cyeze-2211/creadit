@@ -6,6 +6,7 @@ import BoxDelete from "./ShopBoxDelete";
 import { NavLink } from "react-router-dom";
 import axios from "axios";
 import ReactLoading from 'react-loading';
+import EmptyState from "../../../EmptyState";
 
 // Helper function to normalize image URL
 const getImageUrl = (url) => {
@@ -94,78 +95,88 @@ export default function ShopBox() {
           Buyurtmalar qutisi
         </Typography>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7 mx-auto">
-        {orders.map((order) => (
-          <NavLink to={`/order/detail/${order.id}`} key={order.id}>
-            <Card className="w-full bg-white rounded-3xl shadow-xl border border-gray-200 flex flex-col">
-              <CardBody className="flex flex-col items-start p-4">
-                <div className="w-full mb-4 flex items-center gap-3">
-                  <img
-                    src={getImageUrl(order.product?.image)}
-                    alt={order.product?.product_name || "Mahsulot"}
-                    className="w-16 h-16  rounded-xl bg-gray-100 border"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/150x150?text=No+Image";
-                    }}
-                  />
-                  <div>
-                    <Typography variant="h6" className="text-gray-900 font-bold mb-1">
-                      {order.product?.product_name}
-                    </Typography>
-                    <div className="text-xs text-gray-500">
-                      Buyurtma raqami: <span className="font-semibold">{order.id}</span>
-                    </div>
-                  </div>
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7 mx-auto">
+  {orders.length > 0 ? (
+    orders.map((order) => (
+      <NavLink to={`/order/detail/${order.id}`} key={order.id}>
+        <Card className="w-full bg-white rounded-3xl shadow-xl border border-gray-200 flex flex-col">
+          <CardBody className="flex flex-col items-start p-4">
+            <div className="w-full mb-4 flex items-center gap-3">
+              <img
+                src={getImageUrl(order.product?.image)}
+                alt={order.product?.product_name || "Mahsulot"}
+                className="w-16 h-16 rounded-xl bg-gray-100 border"
+                onError={(e) => {
+                  e.currentTarget.src = "https://via.placeholder.com/150x150?text=No+Image";
+                }}
+              />
+              <div>
+                <Typography variant="h6" className="text-gray-900 font-bold mb-1">
+                  {order.product?.product_name}
+                </Typography>
+                <div className="text-xs text-gray-500">
+                  Buyurtma raqami: <span className="font-semibold">{order.id}</span>
                 </div>
+              </div>
+            </div>
 
-                <div className="mb-2 w-full">
-                  <div className="text-gray-800 text-sm">
-                    <span className="font-semibold">Egasining ismi:</span> {order.customer?.name}
-                  </div>
-                  <div className="text-gray-800 text-sm">
-                    <span className="font-semibold">Umumiy to'lov:</span> {order.price} USD
-                  </div>
-                    <div className="text-gray-800 text-sm">
-                    <span className="font-semibold">Buyurtma oylik:</span> {order.monthly_payment}
-                  </div>
-                  <div className="text-gray-800 text-sm">
-                    <span className="font-semibold">Buyurtma sanasi:</span> {order.created_at?.slice(0, 10)}
-                  </div>
-                </div>
+            <div className="mb-2 w-full">
+              <div className="text-gray-800 text-sm">
+                <span className="font-semibold">Egasining ismi:</span> {order.customer?.name}
+              </div>
+              <div className="text-gray-800 text-sm">
+                <span className="font-semibold">Umumiy to'lov:</span> {order.price} USD
+              </div>
+              <div className="text-gray-800 text-sm">
+                <span className="font-semibold">Buyurtma oylik:</span> {order.monthly_payment}
+              </div>
+              <div className="text-gray-800 text-sm">
+                <span className="font-semibold">Buyurtma sanasi:</span> {order.created_at?.slice(0, 10)}
+              </div>
+            </div>
 
-                <div className="flex gap-2 mt-auto ml-auto">
-                  <IconButton
-                    variant="text"
-                    color="blue"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleEditOpen(order);
-                    }}
-                    size="sm"
-                  >
-                    <PencilIcon className="w-5 h-5" />
-                  </IconButton>
+            <div className="flex gap-2 mt-auto ml-auto">
+              <IconButton
+                variant="text"
+                color="blue"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleEditOpen(order);
+                }}
+                size="sm"
+              >
+                <PencilIcon className="w-5 h-5" />
+              </IconButton>
 
-                  <IconButton
-                    variant="text"
-                    color="red"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleDeleteOpen(order);
-                    }}
-                    size="sm"
-                  >
-                    <TrashIcon className="w-5 h-5" />
-                  </IconButton>
-                </div>
-              </CardBody>
-            </Card>
-          </NavLink>
-        ))}
-      </div>
+              <IconButton
+                variant="text"
+                color="red"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDeleteOpen(order);
+                }}
+                size="sm"
+              >
+                <TrashIcon className="w-5 h-5" />
+              </IconButton>
+            </div>
+          </CardBody>
+        </Card>
+      </NavLink>
+    ))
+  ) : (
+     <div className="col-span-full">
+             <EmptyState 
+               title="Mahsulot topilmadi" 
+               subtitle="Hozircha ro‘yxat bo‘sh" 
+              
+             />
+           </div>
+  )}
+</div>
+
 
       {openEdit && editOrder && (
         <BoxEdit

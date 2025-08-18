@@ -17,6 +17,7 @@ import BoxCreate from "./BoxCreate";
 import BoxEdit from "./BoxEdit";
 import BoxDelete from "./BoxDelete";
 import { NavLink } from "react-router-dom";
+import EmptyState from "../../../EmptyState";
 
 export default function Box() {
   const [products, setProducts] = useState([]);
@@ -176,72 +177,64 @@ export default function Box() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
-        {filteredProducts.map((product) => (
-          <NavLink to={`/product/${product.id}`} key={product.id}>
-            <Card
-              className="w-full bg-white rounded-3xl shadow-xl border border-gray-200 flex flex-col hover:shadow-2xl transition"
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
+  {filteredProducts.length > 0 ? (
+    filteredProducts.map((product) => (
+      <NavLink to={`/product/${product.id}`} key={product.id}>
+        <Card className="w-full bg-white rounded-3xl shadow-xl border border-gray-200 flex flex-col hover:shadow-2xl transition">
+          <CardBody className="flex flex-col items-center p-4">
+            <div className="w-full mb-4">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-48 object-cover rounded-xl"
+                onError={(e) => {
+                  e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
+                }}
+              />
+            </div>
+            <Typography
+              variant="h6"
+              className="text-gray-900 font-bold mb-2 text-center"
             >
-              <CardBody className="flex flex-col items-center p-4">
-                <div className="w-full mb-4">
-                 <img
-  src={product.image}
-  alt={product.name}
-  className="w-full h-48 object-cover rounded-xl" // ✅ object-cover qilib rasmni kesib chiqaradi
-  onError={(e) => {
-    e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
-  }}
-/>
+              {product.name}
+            </Typography>
+            <div className="text-gray-800 text-sm mb-1">
+              Narxi: <span className="font-semibold">{product.price} USD</span>
+            </div>
+            <div className="flex gap-2 mt-auto">
+              <IconButton
+                variant="text"
+                color="blue"
+                onClick={(e) => { e.preventDefault(); handleEditOpen(product); }}
+                size="sm"
+              >
+                <PencilIcon className="w-5 h-5" />
+              </IconButton>
+              <IconButton
+                variant="text"
+                color="red"
+                onClick={(e) => { e.preventDefault(); handleDeleteOpen(product); }}
+                size="sm"
+              >
+                <TrashIcon className="w-5 h-5" />
+              </IconButton>
+            </div>
+          </CardBody>
+        </Card>
+      </NavLink>
+    ))
+  ) : (
+    <div className="col-span-full">
+      <EmptyState 
+        title="Mahsulot topilmadi" 
+        subtitle="Hozircha ro‘yxat bo‘sh" 
+       
+      />
+    </div>
+  )}
+</div>
 
-                </div>
-                <Typography
-                  variant="h6"
-                  className="text-gray-900 font-bold mb-2 text-center"
-                >
-                  {product.name}
-                </Typography>
-                <div className="text-gray-800 text-sm mb-1">
-                  Narxi: <span className="font-semibold">{product.price} USD</span>
-                </div>
-                <div className="text-gray-800 text-sm mb-4">
-                  Oyiga:{" "}
-                  <span className="font-semibold">{product.monthly} USD</span> (
-                  {product.months} oy)
-                </div>
-                <div className="flex gap-2 mt-auto">
-                  <IconButton
-                    variant="text"
-                    color="blue"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleEditOpen(product);
-                    }}
-                    size="sm"
-                  >
-                    <PencilIcon className="w-5 h-5" />
-                  </IconButton>
-                  <IconButton
-                    variant="text"
-                    color="red"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleDeleteOpen(product);
-                    }}
-                    size="sm"
-                  >
-                    <TrashIcon className="w-5 h-5" />
-                  </IconButton>
-                </div>
-              </CardBody>
-            </Card>
-          </NavLink>
-        ))}
-        {filteredProducts.length === 0 && (
-          <div className="col-span-full text-center text-gray-500 italic mt-8">
-            Mahsulot topilmadi
-          </div>
-        )}
-      </div>
 
       {openCreate && (
         <BoxCreate

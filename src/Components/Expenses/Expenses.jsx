@@ -14,6 +14,7 @@ import ExpensesCreate from "./ExpensesCreate";
 import ExpensesEdit from "./ExpensesEdit";
 import ExpensesDelete from "./ExpensesDelete";
 import ReactLoading from 'react-loading';
+import EmptyState from "../EmptyState";
 
 const today = dayjs();
 const defaultStart = today.startOf("month").format("YYYY-MM-DD");
@@ -113,9 +114,11 @@ export default function Expenses() {
                              </div>
                            </div>
                 ) : filteredExpenses.length === 0 ? (
-                    <Card className="p-6 bg-gray-50 border text-center text-gray-500">
-                        Xarajatlar topilmadi
-                    </Card>
+                     <EmptyState  
+                                  title="Mahsulot topilmadi" 
+                                  subtitle="Hozircha ro‘yxat bo‘sh" 
+                                 
+                                />
                 ) : (
                     filteredExpenses.map((expense) => (
                         <Card

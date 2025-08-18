@@ -5,9 +5,9 @@ import Swal from "sweetalert2";
 
 export default function BoxCreate({ onCreate, onCancel }) {
   const [name, setName] = useState("");
-  const [image, setImage] = useState(null); // Fayl uchun
-  const [price, setPrice] = useState(""); 
-  const [amount, setAmount] = useState(""); 
+  const [image, setImage] = useState(null);
+  const [price, setPrice] = useState("");
+  const [amount, setAmount] = useState("");
   const [installment, setInstallment] = useState("");
   const [monthlyPayment, setMonthlyPayment] = useState("");
   const [closing, setClosing] = useState(false);
@@ -49,9 +49,9 @@ export default function BoxCreate({ onCreate, onCancel }) {
     try {
       const formData = new FormData();
       formData.append("product_name", name);
-      formData.append("image", image); // Fayl obyektini qo‘shyapmiz
-      formData.append("amount", Number(amount)); 
-      formData.append("price", Number(price)); 
+      formData.append("image", image);
+      formData.append("amount", Number(amount));
+      formData.append("price", Number(price));
       formData.append("Installment", Number(installment));
       formData.append("monthly_payment", monthlyPayment);
 
@@ -64,7 +64,7 @@ export default function BoxCreate({ onCreate, onCancel }) {
           title: "Token topilmadi. Qayta login qiling.",
           showConfirmButton: false,
           timer: 3000,
-          timerProgressBar: true
+          timerProgressBar: true,
         });
         setLoading(false);
         return;
@@ -73,9 +73,9 @@ export default function BoxCreate({ onCreate, onCancel }) {
       const response = await axios.post("/api/products", formData, {
         headers: {
           "ngrok-skip-browser-warning": "true",
-          "Authorization": `Bearer ${token}`,
-          "Accept": "application/json",
-          "Content-Type": "multipart/form-data", // <-- MUHIM!
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -98,9 +98,8 @@ export default function BoxCreate({ onCreate, onCancel }) {
         title: "Mahsulot muvaffaqiyatli qo‘shildi.",
         showConfirmButton: false,
         timer: 3000,
-        timerProgressBar: true
+        timerProgressBar: true,
       });
-
     } catch (error) {
       console.error("Mahsulot qo'sishda xatolik:", error.response?.data || error);
       Swal.fire({
@@ -110,7 +109,7 @@ export default function BoxCreate({ onCreate, onCancel }) {
         title: "Mahsulot qo‘shishda xatolik yuz berdi",
         showConfirmButton: false,
         timer: 3000,
-        timerProgressBar: true
+        timerProgressBar: true,
       });
     } finally {
       setLoading(false);
@@ -118,101 +117,124 @@ export default function BoxCreate({ onCreate, onCancel }) {
   };
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300 ${
-        closing ? "animate-fade-out" : "animate-fade-in"
-      }`}
-    >
+    <>
+      {/* Animatsiya keyframeslarini shu yerda yozamiz */}
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes fade-out {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+        @keyframes modal-in {
+          from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes modal-out {
+          from { opacity: 1; transform: translateY(0) scale(1); }
+          to { opacity: 0; transform: translateY(-20px) scale(0.95); }
+        }
+        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+        .animate-fade-out { animation: fade-out 0.25s ease-in forwards; }
+        .animate-modal-in { animation: modal-in 0.3s ease-out forwards; }
+        .animate-modal-out { animation: modal-out 0.25s ease-in forwards; }
+      `}</style>
+
       <div
-        ref={modalRef}
-        className={`w-full max-w-md ${
-          closing ? "animate-modal-out" : "animate-modal-in"
+        className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm ${
+          closing ? "animate-fade-out" : "animate-fade-in"
         }`}
       >
-        <Card className="bg-white rounded-2xl shadow-2xl border border-gray-200">
-          <CardBody>
-            <Typography variant="h5" className="text-gray-900 font-bold mb-4">
-              Yangi Mahsulot
-            </Typography>
-            <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-              <Input
-                label="Mahsulot nomi"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={loading}
-              />
-              
-              {/* Fayl upload */}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setImage(e.target.files[0])}
-                required
-                disabled={loading}
-                className="border rounded-md p-2"
-              />
-
-              <Input
-                label="Narxi"
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                disabled={loading}
-              />
-              <Input
-                label="Amount"
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-                disabled={loading}
-              />
-              <Input
-                label="Oylik tolov"
-                type="number"
-                value={installment}
-                onChange={(e) => setInstallment(e.target.value)}
-                required
-                disabled={loading}
-              />
-              <Input
-                label="Bo'lib to'lash oyi"
-                value={monthlyPayment}
-                onChange={(e) => setMonthlyPayment(e.target.value)}
-                required
-                disabled={loading}
-              />
-              <div className="flex justify-end gap-2 mt-2">
-                <Button
-                  variant="text"
-                  color="gray"
-                  type="button"
-                  onClick={() => setClosing(true)}
+        <div
+          ref={modalRef}
+          className={`w-full max-w-md ${
+            closing ? "animate-modal-out" : "animate-modal-in"
+          }`}
+        >
+          <Card className="bg-white rounded-2xl shadow-2xl border border-gray-200">
+            <CardBody>
+              <Typography variant="h5" className="text-gray-900 font-bold mb-4">
+                Yangi Mahsulot
+              </Typography>
+              <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+                <Input
+                  label="Mahsulot nomi"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
                   disabled={loading}
-                >
-                  Bekor qilish
-                </Button>
-                <Button 
-                  type="submit" 
-                  color="green"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImage(e.target.files[0])}
+                  required
                   disabled={loading}
-                  className="flex items-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Saqlanmoqda...
-                    </>
-                  ) : (
-                    "Saqlash"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </CardBody>
-        </Card>
+                  className="border rounded-md p-2"
+                />
+                <Input
+                  label="Narxi"
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  disabled={loading}
+                />
+                <Input
+                  label="Amount"
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                <Input
+                  label="Oylik tolov"
+                  type="number"
+                  value={installment}
+                  onChange={(e) => setInstallment(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                <Input
+                  label="Bo'lib to'lash oyi"
+                  value={monthlyPayment}
+                  onChange={(e) => setMonthlyPayment(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                <div className="flex justify-end gap-2 mt-2">
+                  <Button
+                    variant="text"
+                    color="gray"
+                    type="button"
+                    onClick={() => setClosing(true)}
+                    disabled={loading}
+                  >
+                    Bekor qilish
+                  </Button>
+                  <Button
+                    type="submit"
+                    color="green"
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Saqlanmoqda...
+                      </>
+                    ) : (
+                      "Saqlash"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardBody>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

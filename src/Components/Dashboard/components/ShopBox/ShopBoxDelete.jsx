@@ -25,12 +25,12 @@ export default function ShopDelete({ product, onDelete, onCancel }) {
     };
   }, []);
 
-  // Animatsiya tugaganda haqiqiy yopish
+  // Animatsiya tugaganda haqiqiy yopiladi
   useEffect(() => {
     if (closing) {
       const timer = setTimeout(() => {
         onCancel();
-      }, 250);
+      }, 250); // fade-out davomiyligiga mos
       return () => clearTimeout(timer);
     }
   }, [closing, onCancel]);
@@ -48,9 +48,7 @@ export default function ShopDelete({ product, onDelete, onCancel }) {
       });
       onDelete(product.id);
     } catch (error) {
-      alert(
-        error.response?.data?.message || "O'chirishda xatolik yuz berdi"
-      );
+      alert(error.response?.data?.message || "O'chirishda xatolik yuz berdi");
       console.error(error);
     } finally {
       setLoading(false);
@@ -58,48 +56,67 @@ export default function ShopDelete({ product, onDelete, onCancel }) {
   };
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300 ${
-        closing ? "animate-fade-out" : "animate-fade-in"
-      }`}
-    >
+    <>
+      {/* Animatsiyalar */}
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes fade-out {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+        @keyframes modal-in {
+          from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes modal-out {
+          from { opacity: 1; transform: translateY(0) scale(1); }
+          to { opacity: 0; transform: translateY(-20px) scale(0.95); }
+        }
+        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+        .animate-fade-out { animation: fade-out 0.25s ease-in forwards; }
+        .animate-modal-in { animation: modal-in 0.3s ease-out forwards; }
+        .animate-modal-out { animation: modal-out 0.25s ease-in forwards; }
+      `}</style>
+
       <div
-        ref={modalRef}
-        className={`w-full max-w-sm ${
-          closing ? "animate-modal-out" : "animate-modal-in"
-        }`}
+        className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm 
+        ${closing ? "animate-fade-out" : "animate-fade-in"}`}
       >
-        <Card className="bg-white rounded-2xl shadow-2xl border border-gray-200">
-          <CardBody>
-            <Typography variant="h6" className="text-gray-900 font-bold mb-4">
-              Buyurtmani o'chirish
-            </Typography>
-            <Typography className="mb-4 text-gray-800">
-              <span className="font-semibold">
-                {product.product?.product_name || product.product || product.name}
-              </span>{" "}
-              buyurtmasini o‘chirishni tasdiqlaysizmi?
-            </Typography>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="text"
-                color="gray"
-                onClick={() => setClosing(true)}
-                disabled={loading}
-              >
-                Bekor qilish
-              </Button>
-              <Button
-                color="red"
-                onClick={handleDelete}
-                disabled={loading}
-              >
-                O'chirish
-              </Button>
-            </div>
-          </CardBody>
-        </Card>
+        <div
+          ref={modalRef}
+          className={`w-full max-w-sm ${closing ? "animate-modal-out" : "animate-modal-in"}`}
+        >
+          <Card className="bg-white rounded-2xl shadow-2xl border border-gray-200">
+            <CardBody>
+              <Typography variant="h6" className="text-gray-900 font-bold mb-4">
+                Buyurtmani o'chirish
+              </Typography>
+              <Typography className="mb-4 text-gray-800">
+                <span className="font-semibold">
+                  {product.product?.product_name || product.product || product.name}
+                </span>{" "}
+                buyurtmasini o‘chirishni tasdiqlaysizmi?
+              </Typography>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="text"
+                  color="gray"
+                  onClick={() => setClosing(true)}
+                  disabled={loading}
+                >
+                  Bekor qilish
+                </Button>
+                <Button color="red" onClick={handleDelete} disabled={loading}>
+                  {loading ? "O‘chirilmoqda..." : "O'chirish"}
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

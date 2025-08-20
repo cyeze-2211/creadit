@@ -3,7 +3,7 @@ import { Card, CardBody, Typography, Button } from "@material-tailwind/react";
 import axios from "axios";
 import Swal from "sweetalert2";
 
-export default function ExpensesDelete({ id, onDelete, onCancel }) {
+export default function ExpensesDelete({ id,  onCancel }) {
   const [closing, setClosing] = useState(false);
   const [loading, setLoading] = useState(false);
   const modalRef = useRef(null);
@@ -58,7 +58,6 @@ export default function ExpensesDelete({ id, onDelete, onCancel }) {
         },
       });
       showToast("success", "Xarajat o‘chirildi");
-      onDelete(id);
       setClosing(true);
     } catch (error) {
       showToast("error", error.response?.data?.message || "O‘chirishda xatolik yuz berdi");

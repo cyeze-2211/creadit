@@ -10,7 +10,7 @@ import {
 import axios from "axios";
 import Swal from "sweetalert2";
 
-export default function ExpensesEdit({ id, onCreate, onCancel }) {
+export default function ExpensesEdit({ id,  onCancel }) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [date, setDate] = useState("");
@@ -65,7 +65,6 @@ export default function ExpensesEdit({ id, onCreate, onCancel }) {
           date,
         };
 
-        onCreate(updatedExpense);
         onCancel(); 
         showToast("success", "Xarajat muvaffaqiyatli yangilandi");
       } else {
